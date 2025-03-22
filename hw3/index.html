@@ -28,79 +28,330 @@
 	<body>
 		<div class="container">
 		<h1>CS184/284A Spring 2025 Homework 3 Write-Up</h1>
-		<div style="text-align: center;">Names: </div>
+		<div style="text-align: center;">Name: Ishan Amin </div>
 
 		<br>
 
-		Link to webpage: (TODO) <a href="https://cs184.eecs.berkeley.edu/sp25">cs184.eecs.berkeley.edu/sp25</a>
-		Link to GitHub repository: (TODO) <a href="https://cs184.eecs.berkeley.edu/sp25">cs184.eecs.berkeley.edu/sp25</a>
+		Link to webpage: <a href="https://cal-cs184-student.github.io/hw-webpages-ishan/hw3/index.html">https://cal-cs184-student.github.io/hw-webpages-ishan/hw3/index.html</a>
+		<br>
+		Link to GitHub repository: <a href="https://github.com/cal-cs184-student/sp25-hw3-ishan_a">https://github.com/cal-cs184-student/sp25-hw3-ishan_a</a>
 		
-		<figure>
-			<img src="cornell.png" alt="Cornell Boxes with Bunnies" style="width:70%"/>
-			<figcaption>You can add images with captions!</figcaption>
-		</figure>
+
 
 		<!--
 		We've already added one heading per part, to make your write-up as navigable when grading. Please fit your write-up within these sections!
 		-->
 
 		<h2>Overview</h2>
-		Give a high-level overview of what you implemented in this homework. Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the homework.
+		In this homework, we explored various techniques used to simulate light in a scene. We began by implementing the fundamentals of ray tracing, including sampling rays per pixel and intersecting those rays with scene geometry on different shapes.
+
+		We then introduced acceleration structures, specifically bounding volume hierarchies (BVHs), to speed up the ray tracing process. Next, we implemented direct lighting to compute incoming radiance on surfaces, and extended this to handle indirect lighting through multiple bounces. This allowed for more realistic and detailed images. To reduce noise, we incorporated importance sampling of lights and made the process unbiased using Russian Roulette.
+
+		Finally, we implemented adaptive sampling to improve efficiency, recognizing that different regions of an image converge at different rates.
+
+		Overall, this homework gave me a deeper understanding of how light is simulated in computer graphics, and how various techniques are used to implement and optimize realistic rendering in practice.
 
 		<h2>Part 1: Ray Generation and Scene Intersection</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		<p>
+		For ray generation, I first converted the normalized pixel coordinates to camera space. The camera-space x-coordinate was calculated as <code>(2 * x_pixel - 1) * tan(hFov / 2)</code>, and a similar expression was used for the y-coordinate. I then transformed the resulting direction vector from camera space to world space using the camera-to-world (c2w) matrix. The ray's origin in world space was simply the camera's position.
+		</p>
 
-		<p>Here is an example 2x2 gridlike structure using an HTML table. Each <b>tr</b> is a row and each <b>td</b> is a column in that row. You might find this useful for framing and showing your result images in an organized fashion.</p>
+		<p>
+		For triangle intersection, I implemented the Möller–Trumbore algorithm. This algorithm computes the intersection time at which the ray intersects the plane of the triangle, along with the barycentric coordinates of the intersection point. If the intersection time was greater than zero and within the ray’s valid bounds, and all barycentric coordinates were non-negative (ensuring the point was inside the triangle), the intersection was considered valid. If so, I updated the ray’s <code>max_t</code> value and returned true.
+		</p>
+
+		<p>
+		Below are a few rendered images using normal shading to visualize this intersection algorithm on small <code>.dae</code> models.
+		</p>
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+		<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			<tr>
+			<td style="text-align: center;">
+				<img src="images/part1/cow.png" width="400px"/>
+				<figcaption>Normal shading on cow.dae</figcaption>
+			</td>
+			<td style="text-align: center;">
+				<img src="images/part1/spheres.png" width="400px"/>
+				<figcaption>Normal shading on spheres.dae</figcaption>
+			</td>
+			</tr>
+			<tr>
+			<td style="text-align: center;">
+				<img src="images/part1/teapot.png" width="400px"/>
+				<figcaption>Normal shading on teapot.dae</figcaption>
+			</td>
+			<td style="text-align: center;">
+				<!-- Optionally add another image here or leave blank -->
+			</td>
+			</tr>
+		</table>
+		</div>
+
+		<!-- <p>Here is an example 2x2 gridlike structure using an HTML table. Each <b>tr</b> is a row and each <b>td</b> is a column in that row. You might find this useful for framing and showing your result images in an organized fashion.</p>
 		<div style="display: flex; flex-direction: column; align-items: center;">
 			<table style="width: 100%; text-align: center; border-collapse: collapse;">
 			  <tr>
 				<td style="text-align: center;">
-				  <img src="cornell.png" width="400px"/>
+				  <img src="images/example_image.png" width="400px"/>
 				  <figcaption>Caption goes here.</figcaption>
 				</td>
 				<td style="text-align: center;">
-				  <img src="cornell.png" width="400px"/>
+				  <img src="images/example_image.png" width="400px"/>
 				  <figcaption>Caption goes here.</figcaption>
 				</td>
 			  </tr>
 			  <tr>
 				<td style="text-align: center;">
-				  <img src="cornell.png" width="400px"/>
+				  <img src="images/example_image.png" width="400px"/>
 				  <figcaption>Caption goes here.</figcaption>
 				</td>
 				<td style="text-align: center;">
-				  <img src="cornell.png" width="400px"/>
+				  <img src="images/example_image.png" width="400px"/>
 				  <figcaption>Caption goes here.</figcaption>
 				</td>
 			  </tr>
 			</table>
+		</div> -->
+		
+	<h2>Part 2: Bounding Volume Hierarchy</h2>
+	<p>
+	For my BVH construction, I began by computing the global bounding box that enclosed all the relevant primitives, as well as their centroids. If the number of primitives was less than or equal to the <code>max_leaf_size</code>, I terminated the recursion and set the current node as a leaf. Otherwise, I selected the splitting dimension based on the axis with the largest extent in the bounding box. I then partitioned the primitives into left and right groups using the median of the centroids along that dimension. If one group ended up empty, I defaulted to a naive split of half the primitives. Recursively, I constructed BVH nodes for the left and right subgroups.
+	</p>
+
+	<p>
+	This BVH structure allowed me to dramatically reduce rendering times for complex scenes. For instance, rendering <code>cow.dae</code> without BVH took 19.12 seconds, but with BVH, it took only 0.0425 seconds — a 450× speedup. Similarly, <code>teapot.dae</code> dropped from 19.56 seconds to just 0.1583 seconds (124× speedup). These results show how BVH can allow for for scalable rendering.
+	</p>
+
+	<p>
+	Below are some examples of large scenes rendered with BVH and normal shading:
+	</p>
+
+	<div style="display: flex; flex-direction: column; align-items: center;">
+	<table style="width: 100%; text-align: center; border-collapse: collapse;">
+		<tr>
+		<td style="text-align: center;">
+			<img src="images/part2/dragon.png" width="400px"/>
+			<figcaption>BVH-accelerated rendering of dragon.dae</figcaption>
+		</td>
+		<td style="text-align: center;">
+			<img src="images/part2/maxplank.png" width="400px"/>
+			<figcaption>BVH-accelerated rendering of maxplank.dae</figcaption>
+		</td>
+		</tr>
+		<tr>
+		<td style="text-align: center;">
+			<img src="images/part2/wall-e.png" width="400px"/>
+			<figcaption>BVH-accelerated rendering of wall-e.dae</figcaption>
+		</td>
+		<td style="text-align: center;">
+			<!-- Optionally add another image here -->
+		</td>
+		</tr>
+	</table>
+	</div>
+
+	<h2>Part 3: Direct Illumination</h2>
+
+	<p>
+	To implement direct lighting with <strong>uniform hemisphere sampling</strong>, I first generated random directions over the hemisphere above the surface point. For each sample direction <code>w_incoming</code>, I transformed it into world space and cast a shadow ray from the surface point in that direction. If the ray intersected an emissive object (i.e., a light), I used the emitted radiance as incoming light. I then multiplied this with the BSDF value and the cosine of the angle between the incoming ray and the surface normal, and divided the result by the probability density function of sampling the hemisphere uniformly (<code>1 / (2π)</code>). Averaging over all such samples yielded the total lighting contribution.
+	</p>
+
+	<p>
+	For <strong>importance sampling of lights</strong>, I looped over all lights in the scene. For point lights, a single sample sufficed while for area lights, I took multiple samples. For each sample, I computed the incoming radiance, direction, distance, and sampling PDF. I cast a shadow ray toward the light and verified it was unoccluded by setting the ray's max time to be slightly less than the distance to the light. If visible, I evaluated the BSDF and cosine term, scaled by the incoming radiance and divided by the sampling PDF, and then averaged across all samples to estimate the total light contribution.
+	</p>
+
+	<p>
+	Below, we compare direct illumination results using both approaches on the same bunny scene. The first image uses uniform hemisphere sampling, while the rest use light sampling with 1, 4, 16, and 64 light rays respectively, all with 1 sample per pixel. 
+	</p>
+
+	<div style="display: flex; flex-direction: column; align-items: center;">
+	<table style="width: 100%; text-align: center; border-collapse: collapse;">
+		<tr>
+		<td style="text-align: center;">
+			<img src="images/part3/bunny_1_1_H.png" width="400px"/>
+			<figcaption>Uniform hemisphere sampling (l = 1)</figcaption>
+		</td>
+		<td style="text-align: center;">
+			<img src="images/part3/bunny_1_1.png" width="400px"/>
+			<figcaption>Importance sampling (l = 1)</figcaption>
+		</td>
+		</tr>
+		<tr>
+		<td style="text-align: center;">
+			<img src="images/part3/comparison/bunny_1_4.png" width="400px"/>
+			<figcaption>Importance sampling (l = 4)</figcaption>
+		</td>
+		<td style="text-align: center;">
+			<img src="images/part3/comparison/bunny_1_16.png" width="400px"/>
+			<figcaption>Importance sampling (l = 16)</figcaption>
+		</td>
+		</tr>
+		<tr>
+		<td style="text-align: center;">
+			<img src="images/part3/comparison/bunny_1_64.png" width="400px"/>
+			<figcaption>Importance sampling (l = 64)</figcaption>
+		</td>
+		<td style="text-align: center;">
+			<!-- You can optionally add another comparison or summary chart here -->
+		</td>
+		</tr>
+	</table>
+	</div>
+
+	<p>
+	Comparing the results, it's clear that importance sampling yields significantly less noise than uniform hemisphere sampling when using the same number of light rays. The hemisphere-sampled image is extremely grainy and doesn't show much, while even one light sample in the importance sampling method produces much smoother shading. As the number of sampled light rays increases from 1 to 64, the noise in soft shadows decreases substantially, demonstrating how more samples decreases noise.
+	</p>
+
+	<h2>Part 4: Global Illumination</h2>
+
+	<p>
+	I implemented indirect lighting in the <code>at_least_once_bounce_radiance</code> function. First, I checked the ray’s depth parameter: if it was 1, I simply returned the one-bounce radiance. Otherwise, I sampled a new ray direction using importance sampling weighted by the BSDF. I then created a new ray, with the previous ray’s depth decreased by 1, pointing in the sampled direction (transformed into the world view basis). If this new ray hit an object,
+	 I recursively computed the radiance using <code>at_least_one_bounce_radiance</code> for the new ray and intersection. 
+	 The resulting radiance was multiplied by the cosine of the incident angle and the BSDF, divided by the PDF of the sampled direction, and added to the one-bounce radiance.
+	  To incorporate Russian Roulette, I performed a probabilistic check at each recursion; if the coin flip returned true, I returned the one-bounce radiance immediately and stopped recursing.
+	</p>
+
+	<p>
+	Below are two renderings showing <strong>only direct illumination</strong> and <strong>only indirect illumination</strong> using 1024 samples per pixel:
+	</p>
+
+	<div style="display: flex; flex-direction: column; align-items: center;">
+	<table style="width: 100%; text-align: center; border-collapse: collapse;">
+		<tr>
+		<td style="text-align: center;">
+			<img src="images/part4/spheres_direct_vs_ind/CBSpheres_direct_1024.png" width="400px"/>
+			<figcaption>Only direct illumination (s=1024, m=1)</figcaption>
+		</td>
+		<td style="text-align: center;">
+			<img src="images/part4/spheres_direct_vs_ind/CPSpheres_INdirect_only.png" width="400px"/>
+			<figcaption>Only indirect illumination (s=1024, m=2)</figcaption>
+		</td>
+		</tr>
+	</table>
+	</div>
+
+	<p>
+	In the figure below, we render <code>CBbunny.dae</code> with bounce depth <code>m = 0</code> to <code>5</code> using 1024 samples per pixel and <strong>no accumulation</strong>. This shows only the contribution from the <em>nth</em> bounce:
+	</p>
+
+	<div style="display: flex; flex-direction: column; align-items: center;">
+	<table style="width: 100%; text-align: center; border-collapse: collapse;">
+		<tr>
+		<td><img src="images/part4/bunny_noAccumulate/bunny_0.png" width="300px"/><figcaption>m = 0</figcaption></td>
+		<td><img src="images/part4/bunny_noAccumulate/bunny_1.png" width="300px"/><figcaption>m = 1</figcaption></td>
+		<td><img src="images/part4/bunny_noAccumulate/bunny_2.png" width="300px"/><figcaption>m = 2</figcaption></td>
+		</tr>
+		<tr>
+		<td><img src="images/part4/bunny_noAccumulate/bunny_3.png" width="300px"/><figcaption>m = 3</figcaption></td>
+		<td><img src="images/part4/bunny_noAccumulate/bunny_4.png" width="300px"/><figcaption>m = 4</figcaption></td>
+		<td><img src="images/part4/bunny_noAccumulate/bunny_5.png" width="300px"/><figcaption>m = 5</figcaption></td>
+		</tr>
+	</table>
+	</div>
+
+	<p>
+	Looking closely at the <strong>second bounce</strong>, we can see how light bounces off the floor and begins to illuminate the bunny’s lower half. By the <strong>third bounce</strong>, light distribution is more diffuse and contributes more to ambient illumination, particularly along the floor, which makes sense given the light's likely path: floor → ceiling → floor. These subtle, recursive interactions really add to the realism of the scene.
+	</p>
+
+	<p>
+	Below are the <strong>accumulated</strong> versions of the same scene using Russian Roulette and 1024 samples per pixel:
+	</p>
+
+	<div style="display: flex; flex-direction: column; align-items: center;">
+	<table style="width: 100%; text-align: center; border-collapse: collapse;">
+		<tr>
+		<td><img src="images/part4/bunny_accum/bunny_0.png" width="300px"/><figcaption>m = 0</figcaption></td>
+		<td><img src="images/part4/bunny_accum/bunny_1_accum.png" width="300px"/><figcaption>m = 1</figcaption></td>
+		<td><img src="images/part4/bunny_accum/bunny_2_accum.png" width="300px"/><figcaption>m = 2</figcaption></td>
+		</tr>
+		<tr>
+		<td><img src="images/part4/bunny_accum/bunny_3_accum.png" width="300px"/><figcaption>m = 3</figcaption></td>
+		<td><img src="images/part4/bunny_accum/bunny_4_accum.png" width="300px"/><figcaption>m = 4</figcaption></td>
+		<td><img src="images/part4/bunny_accum/bunny_5_accum.png" width="300px"/><figcaption>m = 5</figcaption></td>
+		</tr>
+	</table>
+	</div>
+
+	<p>
+	Finally, we analyze the effect of varying <strong>samples per pixel (s)</strong> on the bunny scene with 3 bounces and 4 light rays. Increasing <code>s</code> greatly improves image quality and reduces noise:
+	</p>
+
+	<div style="display: flex; flex-direction: column; align-items: center;">
+	<table style="width: 100%; text-align: center; border-collapse: collapse;">
+		<tr>
+		<td><img src="images/part4/vary_bunny_samps/bunny_1s.png" width="300px"/><figcaption>1 spp (sample per pixel)</figcaption></td>
+		<td><img src="images/part4/vary_bunny_samps/bunny_2s.png" width="300px"/><figcaption>2 spp</figcaption></td>
+		</tr>
+		<tr>
+		<td><img src="images/part4/vary_bunny_samps/bunny_4s.png" width="300px"/><figcaption>4 spp</figcaption></td>
+		<td><img src="images/part4/vary_bunny_samps/bunny_8s.png" width="300px"/><figcaption>8 spp</figcaption></td>
+		<td><img src="images/part4/vary_bunny_samps/bunny_16s.png" width="300px"/><figcaption>16 spp</figcaption></td>
+		</tr>
+		<tr>
+		<td><img src="images/part4/vary_bunny_samps/bunny_64s.png" width="300px"/><figcaption>64 spp</figcaption></td>
+		<td><img src="images/part4/vary_bunny_samps/bunny_1024s.png" width="300px"/><figcaption>1024 spp</figcaption></td>
+		<td></td>
+		</tr>
+	</table>
+	</div>
+
+	<p>
+	As expected, increasing the sample count leads to clearer, smoother images. Low sample rates produce noisy renders, while 1024 spp results in a realistic, smooth image.
+	</p>
+
+
+	<h2>Part 5: Adaptive Sampling</h2>
+
+		<p>
+		Adaptive sampling is a technique used to optimize rendering time by stopping sampling early for pixels that have mostly converged. Since different areas of a scene converge at different rates (e.g., smooth surfaces vs. complex shadows), adaptive sampling allows us to allocate more samples where they're needed most.
+		</p>
+
+		<p>
+		To implement adaptive sampling, I tracked both the sum and the sum of squares of illuminance values for each pixel. Every <code>samplesPerBatch</code> iterations, I computed the mean and variance of the illuminance values using the formula provided. I then checked the confidence interval by calculating:
+		</p>
+
+		<pre>
+		1.96 × sqrt(variance) / sqrt(num_samples) &lt; maxTolerance × mean
+		</pre>
+
+		<p>
+		If this condition was met, it indicated (with 95% confidence) that the current estimate was within the acceptable error tolerance, so sampling for that pixel was stopped. This approach limits samples in low-variance regions while increasing them in complex regions that need more samples to converge.
+		</p>
+
+		<p>
+		Below are two examples: one rendered with the <strong>bunny</strong> scene and another with the <strong>sphere</strong>. Both were rendered with 2048 samples per pixel maximum, one sample per light, and max ray depth of 5. The heatmaps on the left show the number of samples used per pixel, while the final renders on the right show the resulting image:
+		</p>
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+		<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			<tr>
+			<td style="text-align: center;">
+				<img src="images/part5/bunny_rate.png" width="400px"/>
+				<figcaption>Sample rate heatmap - Bunny scene</figcaption>
+			</td>
+			<td style="text-align: center;">
+				<img src="images/part5/bunny.png" width="400px"/>
+				<figcaption>Final rendered result - Bunny scene</figcaption>
+			</td>
+			</tr>
+			<tr>
+			<td style="text-align: center;">
+				<img src="images/part5/CB_sphere_rate.png" width="400px"/>
+				<figcaption>Sample rate heatmap - Sphere scene</figcaption>
+			</td>
+			<td style="text-align: center;">
+				<img src="images/part5/CB_sphere.png" width="400px"/>
+				<figcaption>Final rendered result - Sphere scene</figcaption>
+			</td>
+			</tr>
+		</table>
 		</div>
-		
-		<h2>Part 2: Bounding Volume Hierarchy</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
-		<h2>Part 3: Direct Illumination</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		<p>
+		In both examples, we clearly observe that more samples were taken in visually complex regions, such as shadow boundaries or bumpy regions. In contrast, flat, evenly lit areas required far fewer samples. Thus, this strategy is able to improve efficiency while preserving  quality.
+		</p>
 
-		<h2>Part 4: Global Illumination</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
-		<h2>Part 5: Adaptive Sampling</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
-		<h2>(Optional) Part 6: Extra Credit Opportunities</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-		
-		<h2>Additional Notes (please remove)</h2>
-		<ul>
-			<li>You can also add code if you'd like as so: <code>code code code</code></li>
-			<li>If you'd like to add math equations, 
-				<ul>
-					<li>You can write inline equations like so: \( a^2 + b^2 = c^2 \)</li>
-					<li>You can write display equations like so: \[ a^2 + b^2 = c^2 \]</li>
-				</ul>
-			</li>
-		</ul>
 		</div>
 	</body>
 </html>
